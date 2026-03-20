@@ -54,13 +54,30 @@ const App: React.FC = () => {
   // Ticker for "X mins ago" — stored in ref so it never triggers a re-render
   const [, setTick] = useState(0);
   const prevLastUpdatedRef = useRef<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchData = useCallback(async (isManualRefresh = false) => {
+    // 1. Cancel any ongoing fetch to prevent Android network crashes / race conditions
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // 2. Create a new AbortController for this fetch
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    // 3. Add an aggressive 5-second timeout (a local LAN server should respond instantly!)
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
     try {
       // Append cache-buster only in the fetch URL string, not in component state
-      const response = await fetch(`${API_BASE}?t=${Date.now()}`);
-      if (!response.ok) throw new Error('Server not responding');
+      const response = await fetch(`${API_BASE}?t=${Date.now()}`, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId); // Clear the timeout if the request finishes successfully!
+
+      if (!response.ok) throw new Error(`Server returned error: ${response.status}`);
       const json: ServerData = await response.json();
 
       // Check staleness using a ref — no extra state
@@ -86,10 +103,27 @@ const App: React.FC = () => {
       });
 
     } catch (err: any) {
+      if (err.name === 'AbortError') {
+        // We aborted the fetch. But was it due to a manual refresh, or a timeout?
+        if (abortControllerRef.current !== controller) {
+          // It was canceled because a NEWER request started. Ignore silently.
+          return;
+        } else {
+          // It was canceled by our 5-second timeout! The Dell server is unresponsive.
+          setAppState(prev => ({ ...prev, error: 'Connection timed out (5s). Is the Dell server running?' }));
+          return;
+        }
+      }
+      
       setAppState(prev => ({
         ...prev,
         error: err instanceof Error ? err.message : String(err),
       }));
+    } finally {
+      // Clean up the ref if it hasn't been replaced by a newer fetch
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
     }
   }, []); // ← empty deps, never changes
 
