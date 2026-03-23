@@ -112,7 +112,7 @@ const App: React.FC = () => {
         const match = json.system.cpu_temp.match(/\d+/);
         parsedTemp = match ? parseInt(match[0], 10) : 0;
         if (parsedTemp > 60) {
-           triggerAlert = true;
+          triggerAlert = true;
         }
       }
       if (triggerAlert) Vibration.vibrate([0, 500, 200, 500]);
@@ -203,7 +203,7 @@ const App: React.FC = () => {
               <Text style={styles.value}>{data.system.load} Load</Text>
               <Text style={styles.subText}>{data.system.active_users} Active User{data.system.active_users !== 1 ? 's' : ''}</Text>
               <Text style={[
-                styles.subText, 
+                styles.subText,
                 cpuTempValue > 60 ? { color: '#E53E3E', fontWeight: 'bold' } : {}
               ]}>
                 🌡️ CPU Temp: {data.system.cpu_temp}
@@ -241,17 +241,30 @@ const App: React.FC = () => {
                 const isMainVault = driveName === 'HDD-2TB';
                 return (
                   <View key={driveName} style={[styles.storageRow, isMainVault && styles.mainVaultStyle, { flexDirection: 'column' }]}>
-                    <View style={styles.row}>
+                    <View style={[styles.row, { justifyContent: 'space-between', alignItems: 'center' }]}>
                       <Text style={[styles.driveLabel, isMainVault && { color: '#B8860B', fontWeight: '800' }]}>
                         {isMainVault ? '⭐ ' : ''}{driveName}
                       </Text>
-                      <View style={{ alignItems: 'flex-end', flexDirection: 'row', gap: 10 }}>
-                        {info.temp && <Text style={styles.percentText}>Temp: {info.temp}</Text>}
-                        {info.status && <Text style={[styles.percentText, isMainVault && { color: '#B8860B' }]}>{info.status}</Text>}
-                        <Text style={[styles.driveValue, isMainVault && { color: '#B8860B' }]}>{info.free_gb != null ? `${info.free_gb}GB Free` : ''}</Text>
+
+                      <View style={{ flexDirection: 'row', gap: 10 }}>
+                        {info.status && (
+                          <Text style={[styles.percentText, isMainVault && { color: '#B8860B' }]}>
+                            {info.status}
+                          </Text>
+                        )}
+                        <Text style={[styles.driveValue, isMainVault && { color: '#B8860B' }]}>
+                          {info.free_gb != null ? `${info.free_gb}GB Free` : ''}
+                        </Text>
                       </View>
                     </View>
-                    
+
+                    {info.temp && (
+                      <Text style={[styles.percentText, { marginTop: 2, marginBottom: 4 }]}>
+                        Temp: {info.temp}
+                      </Text>
+                    )}
+
+                    {/* Progress Bar and % text remains below the temp */}
                     {info.percent != null && (
                       <>
                         <View style={styles.progressBar}>

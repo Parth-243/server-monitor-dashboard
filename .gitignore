@@ -92,3 +92,12 @@ src/config.js
 # Windows
 Thumbs.db
 Desktop.ini
+
+# Android Build Artifacts & APKs
+*.apk
+*.aab
+android/app/build/
+android/build_log.txt
+android/app/src/main/assets/
+android/app/src/main/res/drawable-*/
+android/app/src/main/res/raw/
