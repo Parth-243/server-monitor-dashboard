@@ -174,7 +174,7 @@ const App: React.FC = () => {
       >
         {/* ── Header ── */}
         <View style={styles.headerContainer}>
-          <Image source={require('./assets/logo.png')} style={styles.logo} />
+          <Image source={require('./assets/logo.jpg')} style={styles.logo} />
           <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
             <Text style={styles.header}>Home Server Health</Text>
             {isFetching && <ActivityIndicator style={{ marginLeft: 15 }} size="small" color="#007BFF" />}
